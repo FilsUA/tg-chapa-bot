@@ -40,6 +40,12 @@ def parse_queue(text: str, queue: str):
         return []
 
     ranges = []
+    for start, end in re.findall(r"(\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})", match.group(1)):
+        ranges.append((time_to_minutes(start), time_to_minutes(end)))
+    return ranges
+
+
+    ranges = []
     for start, end in re.findall(r"(\d{2}:\d{2})\s*-\s*(\d{2}:\d{{2}})", match.group(1)):
         ranges.append((time_to_minutes(start), time_to_minutes(end)))
     return ranges
@@ -123,3 +129,4 @@ async def handler(event):
 
 print("✅ Railway бот запущений і слухає канал…")
 client.run_until_disconnected()
+
