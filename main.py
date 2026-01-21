@@ -1,3 +1,5 @@
+print("🚀 main.py стартував")
+
 iimport os
 import re
 import requests
@@ -129,4 +131,5 @@ async def handler(event):
 
 print("✅ Railway бот запущений і слухає канал…")
 client.run_until_disconnected()
+
 
