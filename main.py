@@ -1,6 +1,6 @@
 print("🚀 main.py стартував")
 
-iimport os
+import os
 import re
 import requests
 from telethon import TelegramClient, events
@@ -12,7 +12,10 @@ BOT_TOKEN = os.environ["BOT_TOKEN"]
 CHAT_ID = int(os.environ["CHAT_ID"])
 CHANNEL = os.environ["CHANNEL"]
 
-LAST_POST_ID = int(os.environ.get("LAST_POST_ID", "0"))
+try:
+    LAST_POST_ID = int(os.environ.get("LAST_POST_ID", "0") or 0)
+except ValueError:
+    LAST_POST_ID = 0
 # ===============
 
 KEY_PHRASE = "графіки погодинних вимкнень"
@@ -43,12 +46,6 @@ def parse_queue(text: str, queue: str):
 
     ranges = []
     for start, end in re.findall(r"(\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})", match.group(1)):
-        ranges.append((time_to_minutes(start), time_to_minutes(end)))
-    return ranges
-
-
-    ranges = []
-    for start, end in re.findall(r"(\d{2}:\d{2})\s*-\s*(\d{2}:\d{{2}})", match.group(1)):
         ranges.append((time_to_minutes(start), time_to_minutes(end)))
     return ranges
 
@@ -115,8 +112,6 @@ async def handler(event):
     global LAST_POST_ID
 
     post_id = event.message.id
-
-    # 🔒 АНТИДУБЛЬ
     if post_id <= LAST_POST_ID:
         return
 
@@ -129,20 +124,5 @@ async def handler(event):
         print(f"✅ Опрацьовано повідомлення {post_id}")
 
 
-print("🚀 main.py стартував")
-
-client = TelegramClient("bot", API_ID, API_HASH).start(bot_token=BOT_TOKEN)
-
-@client.on(events.NewMessage(chats=CHANNEL))
-async def handler(event):
-    text = event.message.text or ""
-    result = extract_and_build(text)
-    if result:
-        send_to_group(result)
-
 print("✅ Railway бот запущений і слухає канал…")
 client.run_until_disconnected()
-
-
-
-
