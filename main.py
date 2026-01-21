@@ -1,4 +1,4 @@
-import os
+iimport os
 import re
 import requests
 from telethon import TelegramClient, events
@@ -9,6 +9,8 @@ API_HASH = os.environ["API_HASH"]
 BOT_TOKEN = os.environ["BOT_TOKEN"]
 CHAT_ID = int(os.environ["CHAT_ID"])
 CHANNEL = os.environ["CHANNEL"]
+
+LAST_POST_ID = int(os.environ.get("LAST_POST_ID", "0"))
 # ===============
 
 KEY_PHRASE = "графіки погодинних вимкнень"
@@ -32,25 +34,19 @@ def minutes_to_time(m: int) -> str:
 
 
 def parse_queue(text: str, queue: str):
-    """
-    Повертає список [(start_min, end_min)] для черги
-    """
     pattern = rf"{queue}\s*((?:\d{{2}}:\d{{2}}\s*-\s*\d{{2}}:\d{{2}}[, ]*)+)"
     match = re.search(pattern, text)
     if not match:
         return []
 
     ranges = []
-    for start, end in re.findall(r"(\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})", match.group(1)):
+    for start, end in re.findall(r"(\d{2}:\d{2})\s*-\s*(\d{2}:\d{{2}})", match.group(1)):
         ranges.append((time_to_minutes(start), time_to_minutes(end)))
     return ranges
 
 
 def is_off(ranges, minute):
-    for start, end in ranges:
-        if start <= minute < end:
-            return True
-    return False
+    return any(start <= minute < end for start, end in ranges)
 
 
 def build_light_intervals(q51, q61):
@@ -59,16 +55,14 @@ def build_light_intervals(q51, q61):
         [t for r in q51 + q61 for t in r]
     ))
 
-    light_intervals = []
-
+    intervals = []
     for i in range(len(points) - 1):
         a, b = points[i], points[i + 1]
         if not (is_off(q51, a) and is_off(q61, a)):
-            light_intervals.append((a, b))
+            intervals.append((a, b))
 
-    # склеюємо
     merged = []
-    for start, end in light_intervals:
+    for start, end in intervals:
         if not merged or merged[-1][1] != start:
             merged.append([start, end])
         else:
@@ -110,10 +104,21 @@ client = TelegramClient("bot", API_ID, API_HASH).start(bot_token=BOT_TOKEN)
 
 @client.on(events.NewMessage(chats=CHANNEL))
 async def handler(event):
+    global LAST_POST_ID
+
+    post_id = event.message.id
+
+    # 🔒 АНТИДУБЛЬ
+    if post_id <= LAST_POST_ID:
+        return
+
     text = event.message.text or ""
     result = extract_and_build(text)
+
     if result:
         send_to_group(result)
+        LAST_POST_ID = post_id
+        print(f"✅ Опрацьовано повідомлення {post_id}")
 
 
 print("✅ Railway бот запущений і слухає канал…")
