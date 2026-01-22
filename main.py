@@ -256,10 +256,37 @@ async def group_handler(event):
             send_to_group(response)
             return
 
+async def check_last_channel_post():
+    global LAST_POST_ID
+
+    try:
+        async for message in client.iter_messages(CHANNEL, limit=1):
+            post_id = message.id
+            text = message.text or ""
+
+            # якщо вже обробляли — нічого не робимо
+            if post_id <= LAST_POST_ID:
+                return
+
+            result = extract_and_build(text)
+            if result:
+                send_to_group(result)
+                LAST_POST_ID = post_id
+                print(f"🟡 Догнали пост каналу {post_id}")
+
+    except Exception as e:
+        print(f"⚠️ Помилка при доганянні поста: {e}")
 
 
 
-client.run_until_disconnected()
+async def main():
+    await check_last_channel_post()
+    print("✅ Railway бот запущений і слухає канал…")
+    await client.run_until_disconnected()
+
+client.loop.run_until_complete(main())
+
+
 
 
 
