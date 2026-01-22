@@ -20,6 +20,27 @@ except ValueError:
 
 KEY_PHRASE = "графіки погодинних вимкнень"
 
+CONTACTS = {
+    "Рецепція та адміністрація": [
+        ("Рецепшн", "701"),
+        ("Юрій Анатолійович", "702"),
+        ("Алла Григорівна", "705"),
+        ("Таїсія Вікторівна", "706"),
+        ("Наталія Михайлівна", "715"),
+    ],
+    "Технічні та господарські служби": [
+        ("Технік / столова", "714"),
+        ("Пральня", "710"),
+        ("Кухня", "722"),
+    ],
+    "Конференц-зали": [
+        ("Конференц-зал №1", "712"),
+        ("Конференц-зал №2", "713"),
+        ("Конференц-зал №3", "716"),
+    ],
+}
+
+
 
 def send_to_group(text: str):
     url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
@@ -36,6 +57,17 @@ def time_to_minutes(t: str) -> int:
 
 def minutes_to_time(m: int) -> str:
     return f"{m // 60:02d}:{m % 60:02d}"
+
+
+def build_contacts_text():
+    lines = ["📞 Внутрішні контакти готелю", ""]
+    for section, items in CONTACTS.items():
+        lines.append(f"{section}:")
+        for name, number in items:
+            lines.append(f"• {name} — {number}")
+        lines.append("")
+    return "\n".join(lines).strip()
+
 
 
 def parse_queue(text: str, queue: str):
@@ -111,6 +143,12 @@ client = TelegramClient("bot", API_ID, API_HASH).start(bot_token=BOT_TOKEN)
 async def handler(event):
     global LAST_POST_ID
 
+    text = event.message.text or ""
+
+if text.strip().lower() == "/contacts":
+    send_to_group(build_contacts_text())
+    return
+
     post_id = event.message.id
     if post_id <= LAST_POST_ID:
         return
@@ -126,3 +164,4 @@ async def handler(event):
 
 print("✅ Railway бот запущений і слухає канал…")
 client.run_until_disconnected()
+
