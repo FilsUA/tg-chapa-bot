@@ -94,6 +94,13 @@ def build_wifi_text():
     )
 
 
+def build_codes_text():
+    return (
+        "🔑 Коди доступу для персоналу\n\n"
+        "Корпус \"В\" — 4141\n"
+        "Корпус \"С\" — 4141\n"
+        "Вхід для персоналу — 4444"
+    )
 
 
 def parse_queue(text: str, queue: str):
@@ -198,10 +205,16 @@ async def group_handler(event):
         send_to_group(build_wifi_text())
         return
 
+    if text.strip().lower() == "/codes":
+        send_to_group(build_codes_text())
+        return
+
+
 
 
 
 client.run_until_disconnected()
+
 
 
 
