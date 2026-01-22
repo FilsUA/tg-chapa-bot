@@ -86,6 +86,14 @@ def build_help_text():
     )
 
 
+def build_wifi_text():
+    return (
+        "📶 Wi-Fi \n\n"
+        "Мережа: Hotel Ukraine\n"
+        "Пароль: 0504334141"
+    )
+
+
 
 
 def parse_queue(text: str, queue: str):
@@ -186,9 +194,15 @@ async def group_handler(event):
         send_to_group(build_contacts_text())
         return
 
+    if text.strip().lower() == "/wifi":
+        send_to_group(build_wifi_text())
+        return
+
+
 
 
 client.run_until_disconnected()
+
 
 
 
