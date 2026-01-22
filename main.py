@@ -145,23 +145,25 @@ async def handler(event):
 
     text = event.message.text or ""
 
-if text.strip().lower() == "/contacts":
-    send_to_group(build_contacts_text())
-    return
+    # /contacts
+    if text.strip().lower() == "/contacts":
+        send_to_group(build_contacts_text())
+        return
 
+    # антидубль
     post_id = event.message.id
     if post_id <= LAST_POST_ID:
         return
 
-    text = event.message.text or ""
     result = extract_and_build(text)
-
     if result:
         send_to_group(result)
         LAST_POST_ID = post_id
+
         print(f"✅ Опрацьовано повідомлення {post_id}")
 
 
 print("✅ Railway бот запущений і слухає канал…")
 client.run_until_disconnected()
+
 
