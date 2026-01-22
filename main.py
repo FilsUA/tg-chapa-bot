@@ -140,30 +140,31 @@ client = TelegramClient("bot", API_ID, API_HASH).start(bot_token=BOT_TOKEN)
 
 
 @client.on(events.NewMessage(chats=CHANNEL))
-async def handler(event):
+async def channel_handler(event):
     global LAST_POST_ID
 
-    text = event.message.text or ""
-
-    # /contacts
-    if text.strip().lower() == "/contacts":
-        send_to_group(build_contacts_text())
-        return
-
-    # антидубль
     post_id = event.message.id
     if post_id <= LAST_POST_ID:
         return
 
+    text = event.message.text or ""
     result = extract_and_build(text)
+
     if result:
         send_to_group(result)
         LAST_POST_ID = post_id
+        print(f"✅ Опрацьовано пост каналу {post_id}")
+        
 
-        print(f"✅ Опрацьовано повідомлення {post_id}")
+@client.on(events.NewMessage)
+async def group_handler(event):
+    text = event.message.text or ""
+
+    if text.strip().lower() == "/contacts":
+        send_to_group(build_contacts_text())
 
 
-print("✅ Railway бот запущений і слухає канал…")
 client.run_until_disconnected()
+
 
 
