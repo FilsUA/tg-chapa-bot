@@ -220,11 +220,17 @@ async def channel_handler(event):
 
 @client.on(events.NewMessage)
 async def group_handler(event):
+
+    # ❌ не реагуємо на власні повідомлення бота
+    if event.out:
+        return
+
     text = event.message.text or ""
 
     if text.strip().lower() == "/help":
         send_to_group(build_help_text())
         return
+
 
     if text.strip().lower() == "/contacts":
         send_to_group(build_contacts_text())
@@ -250,6 +256,7 @@ async def group_handler(event):
 
 
 client.run_until_disconnected()
+
 
 
 
