@@ -73,6 +73,21 @@ def build_contacts_text():
     return "\n".join(lines).strip()
 
 
+def build_help_text():
+    return (
+        "🤖 Допомога по боту\n\n"
+        "Доступні команди:\n"
+        "/help — ця довідка\n"
+        "/contacts — внутрішні телефони готелю\n"
+        "/wifi — Wi-Fi для персоналу\n"
+        "/codes — коди доступу для персоналу\n\n"
+        "Автоматично в чаті:\n"
+        "• графіки погодинних вимкнень світла (коли вони зʼявляються)\n\n"
+        "Бот працює 24/7 і завжди доступний у цій групі."
+    )
+
+
+
 
 def parse_queue(text: str, queue: str):
     pattern = rf"{queue}\s*((?:\d{{2}}:\d{{2}}\s*-\s*\d{{2}}:\d{{2}}[, ]*)+)"
@@ -158,17 +173,24 @@ async def channel_handler(event):
         send_to_group(result)
         LAST_POST_ID = post_id
         print(f"✅ Опрацьовано пост каналу {post_id}")
-        
+
 
 @client.on(events.NewMessage)
 async def group_handler(event):
     text = event.message.text or ""
 
+    if text.strip().lower() == "/help":
+        send_to_group(build_help_text())
+        return
+
     if text.strip().lower() == "/contacts":
         send_to_group(build_contacts_text())
+        return
+
 
 
 client.run_until_disconnected()
+
 
 
 
