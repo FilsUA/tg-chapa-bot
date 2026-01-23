@@ -99,11 +99,10 @@ def extract_and_build(text: str):
     intervals = build_light_intervals(q51, q61)
 
     lines = [
-        f"⚡ Графік погодинних вимкнень на {date}",
-        "",
-        "Згідно двох черг, світло буде в такі проміжки часу:",
-        ""
-    ]
+    f"Графіки відключень світла на {date}",
+    ""
+]
+
 
     for start, end in intervals:
         lines.append(f"{minutes_to_time(start)}–{minutes_to_time(end)}")
@@ -237,3 +236,4 @@ send_to_group(STARTUP_MESSAGE)
 
 print("✅ Railway бот запущений і слухає канал…")
 client.run_until_disconnected()
+
