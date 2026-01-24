@@ -180,7 +180,7 @@ client = TelegramClient("user", API_ID, API_HASH)
 
 @client.on(events.NewMessage)
 async def handler(event):
-    # ігноруємо власні повідомлення бота
+    # ігноруємо власні повідомлення
     if event.out:
         return
 
@@ -194,7 +194,7 @@ async def handler(event):
     print("TEXT:\n", text)
     print("-" * 40)
 
-    # ТИМЧАСОВО перепощуємо ВСЕ
+    # DEBUG: перепощуємо ВСЕ
     send_to_group(
         f"📢 DEBUG MESSAGE\n"
         f"chat_id: {chat_id}\n"
@@ -203,8 +203,9 @@ async def handler(event):
     )
 
 
-# ================== STARTUP ==================
-print("✅ Railway бот запущений і слухає ВСІ повідомлення")
+# ================== START ==================
+client.start()
+print("✅ User session запущена, слухає ВСІ повідомлення…")
 client.run_until_disconnected()
 
 
