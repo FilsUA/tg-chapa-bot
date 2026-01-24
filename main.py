@@ -174,62 +174,37 @@ KEYWORD_RESPONSES = {
     ),
 }
 
-
 # ================== TELETHON ==================
 client = TelegramClient("bot", API_ID, API_HASH).start(bot_token=BOT_TOKEN)
 
 
-@client.on(events.NewMessage(chats=CHANNEL))
-async def handler(event):
-    text = event.message.text or ""
-    post_id = event.message.id
-
-    print("📥 НОВИЙ ПОСТ З КАНАЛУ")
-    print("ID:", post_id)
-    print(text)
-
-    send_to_group(
-        "📢 НОВИЙ ПОСТ З КАНАЛУ:\n\n" + text
-    )
-
 @client.on(events.NewMessage)
-async def group_handler(event):
+async def handler(event):
+    # ігноруємо власні повідомлення бота
     if event.out:
         return
 
+    chat_id = event.chat_id
     text = event.message.text or ""
-    t = text.lower().strip()
+    post_id = event.message.id
 
-    if t == "/help":
-        send_to_group(build_help_text())
-        return
+    print("📥 NEW MESSAGE")
+    print("CHAT ID:", chat_id)
+    print("POST ID:", post_id)
+    print("TEXT:\n", text)
+    print("-" * 40)
 
-    if t == "/contacts":
-        send_to_group(build_contacts_text())
-        return
-
-    if t == "/wifi":
-        send_to_group(build_wifi_text())
-        return
-
-    if t == "/codes":
-        send_to_group(build_codes_text())
-        return
-
-    for keyword, response in KEYWORD_RESPONSES.items():
-        if keyword in t:
-            send_to_group(response)
-            return
+    # ТИМЧАСОВО перепощуємо ВСЕ
+    send_to_group(
+        f"📢 DEBUG MESSAGE\n"
+        f"chat_id: {chat_id}\n"
+        f"post_id: {post_id}\n\n"
+        f"{text}"
+    )
 
 
 # ================== STARTUP ==================
-STARTUP_MESSAGE = (
-    "⚠️ Бот був офлайн.\n"
-    "Якщо під час цього вийшов новий графік — перевірте канал pat_cherkasyoblenergo."
-)
-
-send_to_group(STARTUP_MESSAGE)
-
-print("✅ Railway бот запущений і слухає канал…")
+print("✅ Railway бот запущений і слухає ВСІ повідомлення")
 client.run_until_disconnected()
+
 
