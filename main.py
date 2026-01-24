@@ -175,7 +175,7 @@ KEYWORD_RESPONSES = {
 }
 
 # ================== TELETHON ==================
-client = TelegramClient("bot", API_ID, API_HASH).start(bot_token=BOT_TOKEN)
+client = TelegramClient("user", API_ID, API_HASH)
 
 
 @client.on(events.NewMessage)
@@ -206,5 +206,6 @@ async def handler(event):
 # ================== STARTUP ==================
 print("✅ Railway бот запущений і слухає ВСІ повідомлення")
 client.run_until_disconnected()
+
 
 
