@@ -180,21 +180,17 @@ client = TelegramClient("bot", API_ID, API_HASH).start(bot_token=BOT_TOKEN)
 
 
 @client.on(events.NewMessage(chats=CHANNEL))
-async def channel_handler(event):
-    global LAST_POST_ID
-
-    post_id = event.message.id
-    if post_id <= LAST_POST_ID:
-        return
-
+async def handler(event):
     text = event.message.text or ""
-    result = extract_and_build(text)
+    post_id = event.message.id
 
-    if result:
-        send_to_group(result)
-        LAST_POST_ID = post_id
-        print(f"✅ Опрацьовано пост каналу {post_id}")
+    print("📥 НОВИЙ ПОСТ З КАНАЛУ")
+    print("ID:", post_id)
+    print(text)
 
+    send_to_group(
+        "📢 НОВИЙ ПОСТ З КАНАЛУ:\n\n" + text
+    )
 
 @client.on(events.NewMessage)
 async def group_handler(event):
