@@ -175,7 +175,15 @@ KEYWORD_RESPONSES = {
 }
 
 # ================== TELETHON ==================
-client = TelegramClient("user", API_ID, API_HASH)
+from telethon.sessions import StringSession
+
+SESSION = os.environ["TG_SESSION"]
+
+client = TelegramClient(
+    StringSession(SESSION),
+    API_ID,
+    API_HASH
+)
 
 
 @client.on(events.NewMessage)
@@ -207,6 +215,7 @@ async def handler(event):
 client.start()
 print("✅ User session запущена, слухає ВСІ повідомлення…")
 client.run_until_disconnected()
+
 
 
 
