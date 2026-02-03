@@ -4,19 +4,19 @@ import os
 import re
 import requests
 from telethon import TelegramClient, events
+from telethon.sessions import StringSession
 
 # ================== ENV ==================
 API_ID = int(os.environ["API_ID"])
 API_HASH = os.environ["API_HASH"]
 BOT_TOKEN = os.environ["BOT_TOKEN"]
 CHAT_ID = int(os.environ["CHAT_ID"])
-CHANNEL = os.environ["CHANNEL"]
-
-LAST_POST_ID = int(os.environ.get("LAST_POST_ID", "0"))
+CHANNEL = os.environ["CHANNEL"].lstrip("@")
+TG_SESSION = os.environ["TG_SESSION"]
 # =========================================
 
 
-# ================== HELPERS ==================
+# ================== TELEGRAM SEND ==================
 def send_to_group(text: str):
     url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
     requests.post(url, data={
@@ -25,6 +25,7 @@ def send_to_group(text: str):
     })
 
 
+# ================== TIME HELPERS ==================
 def time_to_minutes(t: str) -> int:
     h, m = map(int, t.split(":"))
     return h * 60 + m
@@ -34,12 +35,12 @@ def minutes_to_time(m: int) -> str:
     return f"{m // 60:02d}:{m % 60:02d}"
 
 
-# ================== DETECT GRAPH ==================
+# ================== GRAPH DETECTION ==================
 def is_power_schedule(text: str) -> bool:
     t = text.lower()
     return (
         "графік" in t
-        and "погодинні" in t
+        and "погодин" in t
         and "години відсутності електропостачання" in t
     )
 
@@ -62,10 +63,7 @@ def is_off(ranges, minute):
 
 
 def build_light_intervals(q51, q61):
-    points = sorted(set(
-        [0, 1440] +
-        [t for r in q51 + q61 for t in r]
-    ))
+    points = sorted(set([0, 1440] + [t for r in q51 + q61 for t in r]))
 
     intervals = []
     for i in range(len(points) - 1):
@@ -88,7 +86,7 @@ def extract_and_build(text: str):
         return None
 
     date_match = re.search(r"\d{1,2}\s+[а-яіїє]+", text, re.IGNORECASE)
-    date = date_match.group(0) if date_match else ""
+    date = date_match.group(0) if date_match else "—"
 
     q51 = parse_queue(text, "5.1")
     q61 = parse_queue(text, "6.1")
@@ -99,88 +97,19 @@ def extract_and_build(text: str):
     intervals = build_light_intervals(q51, q61)
 
     lines = [
-    f"Графіки відключень світла на {date}",
-    ""
-]
-
+        f"Графік відключення світла на {date}",
+        ""
+    ]
 
     for start, end in intervals:
-        lines.append(f"{minutes_to_time(start)}–{minutes_to_time(end)}")
+        lines.append(f"✅ {minutes_to_time(start)}–{minutes_to_time(end)}")
 
     return "\n".join(lines)
 
 
-# ================== STATIC TEXTS ==================
-def build_contacts_text():
-    return (
-        "📞 Внутрішні телефони\n\n"
-        "701 — рецепшн\n"
-        "702 — Юрій Анатолійович\n"
-        "705 — Алла Григорівна\n"
-        "706 — Таїсія Вікторівна\n"
-        "710 — пральня\n"
-        "712 — конференц-зал №1\n"
-        "713 — конференц-зал №2\n"
-        "714 — технік / столова\n"
-        "715 — Наталія Михайлівна\n"
-        "716 — конференц-зал №3\n"
-        "722 — кухня"
-    )
-
-
-def build_help_text():
-    return (
-        "🤖 Допомога по боту\n\n"
-        "/help — ця довідка\n"
-        "/contacts — внутрішні телефони\n"
-        "/wifi — Wi-Fi для персоналу\n"
-        "/codes — коди доступу\n\n"
-        "Бот автоматично публікує оновлені графіки відключень світла."
-    )
-
-
-def build_wifi_text():
-    return (
-        "📶 Wi-Fi для персоналу\n\n"
-        "Мережа: STAFF_WIFI\n"
-        "Пароль: PASSWORD"
-    )
-
-
-def build_codes_text():
-    return (
-        "🔑 Коди доступу\n\n"
-        'Корпус "В" — 4141\n'
-        'Корпус "С" — 4141\n'
-        "Вхід для персоналу — 4444"
-    )
-
-
-# ================== KEYWORD REACTIONS ==================
-KEYWORD_RESPONSES = {
-    "рецепшн": "📞 Рецепшн — 701",
-    "технік": "🔧 Технік / столова — 714",
-    "столова": "🍽️ Столова / технік — 714",
-    "пральня": "🧺 Пральня — 710",
-    "кухня": "🍳 Кухня — 722",
-    "wifi": "📶 Wi-Fi: напишіть /wifi",
-    "wi-fi": "📶 Wi-Fi: напишіть /wifi",
-    "телефони": "📞 Всі телефони: /contacts",
-    "конференц-зали": (
-        "🏢 Конференц-зали:\n"
-        "№1 — 712\n"
-        "№2 — 713\n"
-        "№3 — 716"
-    ),
-}
-
 # ================== TELETHON ==================
-from telethon.sessions import StringSession
-
-SESSION = os.environ["TG_SESSION"]
-
 client = TelegramClient(
-    StringSession(SESSION),
+    StringSession(TG_SESSION),
     API_ID,
     API_HASH
 )
@@ -192,30 +121,25 @@ async def handler(event):
     if event.out:
         return
 
-    chat_id = event.chat_id
+    # фільтр ТІЛЬКИ по потрібному каналу
+    if not event.chat or event.chat.username != CHANNEL:
+        return
+
     text = event.message.text or ""
-    post_id = event.message.id
+    print("📥 Новий пост з каналу")
 
-    print("📥 NEW MESSAGE")
-    print("CHAT ID:", chat_id)
-    print("POST ID:", post_id)
-    print("TEXT:\n", text)
-    print("-" * 40)
-
-    # DEBUG: перепощуємо ВСЕ
-    send_to_group(
-        f"📢 DEBUG MESSAGE\n"
-        f"chat_id: {chat_id}\n"
-        f"post_id: {post_id}\n\n"
-        f"{text}"
-    )
+    result = extract_and_build(text)
+    if result:
+        print("⚡ Знайдено графік — публікуємо")
+        send_to_group(result)
+    else:
+        print("ℹ️ Пост без графіка — пропускаємо")
 
 
 # ================== START ==================
 client.start()
-print("✅ User session запущена, слухає ВСІ повідомлення…")
+print(f"👂 Слухаємо канал: {CHANNEL}")
 client.run_until_disconnected()
-
 
 
 
