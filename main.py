@@ -117,9 +117,13 @@ client = TelegramClient(
 
 @client.on(events.NewMessage(chats='@pat_cherkasyoblenergo'))
 async def handler(event):
-    # ігноруємо власні повідомлення
-    if event.out:
-        return
+    text = event.message.text or ""
+    print("📥 НОВИЙ ПОСТ З КАНАЛУ")
+    print(text)
+
+    send_to_group(
+        "📢 НОВИЙ ПОСТ З КАНАЛУ:\n\n" + text
+    )
 
     # фільтр ТІЛЬКИ по потрібному каналу
     if not event.chat or event.chat.username != CHANNEL:
