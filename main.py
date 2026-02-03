@@ -1,3 +1,12 @@
+print("🚀 BOT STARTED ON RAILWAY")
+
+print("ENV CHECK:",
+      bool(os.environ.get("API_ID")),
+      bool(os.environ.get("API_HASH")),
+      bool(os.environ.get("TG_SESSION")),
+      bool(os.environ.get("BOT_TOKEN")),
+      bool(os.environ.get("CHAT_ID")))
+
 print("🚀 main.py стартував")
 
 import os
