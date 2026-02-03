@@ -39,7 +39,7 @@ def is_power_schedule(text: str) -> bool:
     t = text.lower()
     return (
         "графік" in t
-        and "погодинн" in t
+        and "погодинні" in t
         and "години відсутності електропостачання" in t
     )
 
