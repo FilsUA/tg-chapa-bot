@@ -115,7 +115,7 @@ client = TelegramClient(
 )
 
 
-@client.on(events.NewMessage)
+@client.on(events.NewMessage(chats='@pat_cherkasyoblenergo'))
 async def handler(event):
     # ігноруємо власні повідомлення
     if event.out:
