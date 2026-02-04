@@ -1,3 +1,7 @@
+python
+
+import os
+
 print("🚀 BOT STARTED ON RAILWAY")
 
 print("ENV CHECK:",
@@ -153,6 +157,7 @@ async def handler(event):
 client.start()
 print(f"👂 Слухаємо канал: {CHANNEL}")
 client.run_until_disconnected()
+
 
 
 
