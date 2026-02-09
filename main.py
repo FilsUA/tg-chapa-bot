@@ -152,9 +152,24 @@ async def handler(event):
 
 
 # ================== START ==================
-client.start()
-print(f"👂 Слухаємо канал: {CHANNEL}")
-client.run_until_disconnected()
+
+import asyncio
+
+async def keep_alive():
+    while True:
+        await asyncio.sleep(300)
+        print("💓 keep alive")
+
+client.loop.create_task(keep_alive())
+
+
+async def main():
+    await client.start()
+    print("✅ User session запущена, слухає канал…")
+    await client.run_until_disconnected()
+
+client.loop.run_until_complete(main())
+
 
 
 
