@@ -1,39 +1,49 @@
 import os
-
-print("🚀 BOT STARTED ON RAILWAY")
-
-print("ENV CHECK:",
-      bool(os.environ.get("API_ID")),
-      bool(os.environ.get("API_HASH")),
-      bool(os.environ.get("TG_SESSION")),
-      bool(os.environ.get("BOT_TOKEN")),
-      bool(os.environ.get("CHAT_ID")))
-
-print("🚀 main.py стартував")
-
-import os
 import asyncio
+import re
+import requests
+
 from telethon import TelegramClient, events
 from telethon.sessions import StringSession
+
+
+# ================== BOOT LOG ==================
+print("🚀 BOT STARTED ON RAILWAY")
+
+print(
+    "ENV CHECK:",
+    bool(os.environ.get("API_ID")),
+    bool(os.environ.get("API_HASH")),
+    bool(os.environ.get("TG_SESSION")),
+    bool(os.environ.get("BOT_TOKEN")),
+    bool(os.environ.get("CHAT_ID")),
+)
+
+print("🚀 main.py стартував")
 
 
 # ================== ENV ==================
 API_ID = int(os.environ["API_ID"])
 API_HASH = os.environ["API_HASH"]
+TG_SESSION = os.environ["TG_SESSION"]
+
 BOT_TOKEN = os.environ["BOT_TOKEN"]
 CHAT_ID = int(os.environ["CHAT_ID"])
 CHANNEL = os.environ["CHANNEL"].lstrip("@")
-TG_SESSION = os.environ["TG_SESSION"]
 # =========================================
 
 
 # ================== TELEGRAM SEND ==================
 def send_to_group(text: str):
     url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
-    requests.post(url, data={
-        "chat_id": CHAT_ID,
-        "text": text
-    })
+    requests.post(
+        url,
+        data={
+            "chat_id": CHAT_ID,
+            "text": text,
+        },
+        timeout=10,
+    )
 
 
 # ================== TIME HELPERS ==================
@@ -64,8 +74,11 @@ def parse_queue(text: str, queue: str):
         return []
 
     ranges = []
-    for start, end in re.findall(r"(\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})", match.group(1)):
+    for start, end in re.findall(
+        r"(\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})", match.group(1)
+    ):
         ranges.append((time_to_minutes(start), time_to_minutes(end)))
+
     return ranges
 
 
@@ -109,7 +122,7 @@ def extract_and_build(text: str):
 
     lines = [
         f"Графік відключення світла на {date}",
-        ""
+        "",
     ]
 
     for start, end in intervals:
@@ -122,26 +135,15 @@ def extract_and_build(text: str):
 client = TelegramClient(
     StringSession(TG_SESSION),
     API_ID,
-    API_HASH
+    API_HASH,
 )
 
 
-@client.on(events.NewMessage(chats='@pat_cherkasyoblenergo'))
+@client.on(events.NewMessage(chats=CHANNEL))
 async def handler(event):
     text = event.message.text or ""
-    print("📥 НОВИЙ ПОСТ З КАНАЛУ")
-    print(text)
-
-    send_to_group(
-        "📢 НОВИЙ ПОСТ З КАНАЛУ:\n\n" + text
-    )
-
-    # фільтр ТІЛЬКИ по потрібному каналу
-    if not event.chat or event.chat.username != CHANNEL:
-        return
-
-    text = event.message.text or ""
     print("📥 Новий пост з каналу")
+    print(text)
 
     result = extract_and_build(text)
     if result:
@@ -151,24 +153,24 @@ async def handler(event):
         print("ℹ️ Пост без графіка — пропускаємо")
 
 
-# ================== START ==================
-
+# ================== KEEP ALIVE ==================
 async def keep_alive():
     while True:
         await asyncio.sleep(300)
         print("💓 keep alive")
 
+
+# ================== START ==================
 async def main():
-    await client.start()
-    print("✅ User session запущена, слухає канал…")
+    await client.connect()
+
+    if not await client.is_user_authorized():
+        raise RuntimeError("❌ TG_SESSION не авторизована")
+
+    print("✅ User session активна, слухаємо канал")
+
     asyncio.create_task(keep_alive())
     await client.run_until_disconnected()
 
+
 client.loop.run_until_complete(main())
-
-
-
-
-
-
-
