@@ -12,10 +12,10 @@ print("ENV CHECK:",
 print("🚀 main.py стартував")
 
 import os
-import re
-import requests
+import asyncio
 from telethon import TelegramClient, events
 from telethon.sessions import StringSession
+
 
 # ================== ENV ==================
 API_ID = int(os.environ["API_ID"])
@@ -153,22 +153,19 @@ async def handler(event):
 
 # ================== START ==================
 
-import asyncio
-
 async def keep_alive():
     while True:
         await asyncio.sleep(300)
         print("💓 keep alive")
 
-client.loop.create_task(keep_alive())
-
-
 async def main():
     await client.start()
     print("✅ User session запущена, слухає канал…")
+    asyncio.create_task(keep_alive())
     await client.run_until_disconnected()
 
 client.loop.run_until_complete(main())
+
 
 
 
